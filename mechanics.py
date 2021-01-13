@@ -1,8 +1,6 @@
-from _typeshed import NoneType
 from os import system, path, mkdir
 from json import load, dump, JSONDecodeError
-from time import ctime, sleep
-from typing import runtime_checkable
+from time import sleep
 
 
 class Utilities:
@@ -12,7 +10,7 @@ class Utilities:
         if not path.exists("C:\\Password_Manager"): mkdir("C:\\Password_Manager")
 
         try:
-            with open("C:\\Passowrd_Manager\\mypw.json") as f:
+            with open("C:\\Password_Manager\\mypw.json") as f:
                 try:
                     data = load(f)
                 except JSONDecodeError:
@@ -28,7 +26,10 @@ class Utilities:
     @staticmethod
     def show_data(mydict):
         print("Oh ho? Below is a list of all of your accounts")
-        print(*mydict.keys())
+        print()
+        for k in mydict.keys():
+            print(k)
+        print()
         print("What is the name of the account you wish to view? Press CTRL + C at any time to return to main menu")
         name = input(": ").capitalize()
         check = mydict.get(name, None)
@@ -94,6 +95,7 @@ class Utilities:
             if answer == 2: raise KeyboardInterrupt
             del mydict[name]
             print("Deleted")
+            Utilities.save(mydict)
 
         except KeyboardInterrupt:
             print("Returning to main menu")
