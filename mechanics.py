@@ -1,7 +1,8 @@
+from _typeshed import NoneType
 from os import system, path, mkdir
 from json import load, dump, JSONDecodeError
 from time import ctime, sleep
-
+from typing import runtime_checkable
 
 
 class Utilities:
@@ -25,20 +26,77 @@ class Utilities:
         return data
 
     @staticmethod
+    def show_data(mydict):
+        print("Oh ho? Below is a list of all of your accounts")
+        print(*mydict.keys())
+        print("What is the name of the account you wish to view? Press CTRL + C at any time to return to main menu")
+        name = input(": ").capitalize()
+        check = mydict.get(name, None)
+        return name, check
+
+    @staticmethod
     def create(mydict):
-        pass
+        try:
+            print("So you wish to save a new password? Excellent. For what account will this password be for? Press CTRL + C at any time to quit")
+            name = input(": ").capitalize()
+            print(f"Noted. What is the password for {name}")
+            password = input(": ")
+            mydict[name] = password
+            Utilities.save(mydict)
+            print("Saved")
+        except KeyboardInterrupt:
+            print("Returning to main menu")
 
     @staticmethod
     def read(mydict):
-        pass
+        try:
+            name, check = Utilities.show_data(mydict)
+
+            if not check:
+                print(f"Could not find an account for {name}")
+                raise KeyboardInterrupt
+
+            print(f"{name}: {mydict[name]}")
+            input("press enter to proceed:")
+
+        except KeyboardInterrupt:
+            print("Returning to main menu")
+            
     
     @staticmethod
     def update(mydict):
-        pass
+        try:
+            name, check = Utilities.show_data(mydict)            
+            if not check:
+                print(f"Could not find an account for {name}")
+                raise KeyboardInterrupt
+
+            print(f"The current password for {name} is {mydict[name]}...")
+            print("What would you like the new password to be?")
+            new_password = input(": ")
+            mydict[name] = new_password
+            Utilities.save(mydict)
+            print("Password has been updated successfully")
+
+        except KeyboardInterrupt:
+            print("Returning to main menu")
 
     @staticmethod
     def delete(mydict):
-        pass
+        try:
+            name, check = Utilities.show_data(mydict)
+            if not check:
+                print(f"Could not find an account for {name}")
+                raise KeyboardInterrupt
+
+            prompt = f"Are you sure you wish to delete {name}?\n1)Yes\n2)No"
+            answer = Utilities.verifyResponse(prompt, [1,2])
+            if answer == 2: raise KeyboardInterrupt
+            del mydict[name]
+            print("Deleted")
+
+        except KeyboardInterrupt:
+            print("Returning to main menu")
         
     @staticmethod
     def save(mydict):
@@ -47,7 +105,7 @@ class Utilities:
             
 
     @staticmethod
-    def verifyResponse(prompt, numrange):
+    def verifyResponse(prompt, numrange) -> int:
         while True:
             system("CLS")
             print(prompt)
