@@ -71,10 +71,10 @@ class Utilities:
 class CRUD:
     def __init__(self, passwords) -> None:
         self.passwords = passwords
-        self.passwordGen = self.PasswordGenerator
+        self.passwordGen = PasswordGenerator()
 
     def generate(self):
-        
+        self.passwordGen.main()
 
     def create(self):
         print("So you wish to save a new password? Excellent. For what account will this password be for? Press CTRL + C at any time to quit")
