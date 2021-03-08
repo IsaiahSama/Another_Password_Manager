@@ -37,5 +37,5 @@ class PasswordGenerator:
     def show_password(self, password):
         print("Now listen closely... your password is...")
         print(''.join(password))
-        print("\nPress enter to continue: ")
+        input("\nPress enter to continue: ")
     

@@ -12,12 +12,12 @@ class Main():
         sleep(2)
         system("CLS")
         prompt = "How may I help you today?\n1)Generate a new password\n2)Add a new Password\n3)View a Password\n4)Update a Password\n5)Delete a Password\n6)Exit the program\n"
-        response = Utilities.verifyResponse(prompt, [1,2,3,4,5])
-        if response == 1: Utilities.generate()
-        elif response == 2: Utilities.create(self.pwords)
-        elif response == 3: Utilities.read(self.pwords)
-        elif response == 4: Utilities.update(self.pwords)
-        elif response == 5: Utilities.delete(self.pwords)
+        response = Utilities.verifyResponse(prompt, [1,2,3,4,5,6])
+        if response == 1: self.crud.generate()
+        elif response == 2: self.crud.create()
+        elif response == 3: self.crud.read()
+        elif response == 4: self.crud.update()
+        elif response == 5: self.crud.delete()
         elif response == 6: raise SystemExit
 
 pwords = Utilities.setup()
