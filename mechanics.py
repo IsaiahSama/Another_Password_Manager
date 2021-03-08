@@ -1,16 +1,17 @@
 from os import system, path, mkdir
 from json import load, dump, JSONDecodeError
 from time import sleep
+from password_gen import PasswordGenerator
 
 
 class Utilities:
     
     @staticmethod
     def setup():
-        if not path.exists("C:\\Password_Manager"): mkdir("C:\\Password_Manager")
+        if not path.exists("./passwords"): mkdir("./passwords")
 
         try:
-            with open("C:\\Password_Manager\\mypw.json") as f:
+            with open("./passwords\\mypw.json") as f:
                 try:
                     data = load(f)
                 except JSONDecodeError:
@@ -35,75 +36,17 @@ class Utilities:
         check = mydict.get(name, None)
         return name, check
 
-    @staticmethod
-    def create(mydict):
-        try:
-            print("So you wish to save a new password? Excellent. For what account will this password be for? Press CTRL + C at any time to quit")
-            name = input(": ").capitalize()
-            print(f"Noted. What is the password for {name}")
-            password = input(": ")
-            mydict[name] = password
-            Utilities.save(mydict)
-            print("Saved")
-        except KeyboardInterrupt:
-            print("Returning to main menu")
-
-    @staticmethod
-    def read(mydict):
-        try:
-            name, check = Utilities.show_data(mydict)
-
-            if not check:
-                print(f"Could not find an account for {name}")
-                raise KeyboardInterrupt
-
-            print(f"{name}: {mydict[name]}")
-            input("press enter to proceed:")
-
-        except KeyboardInterrupt:
-            print("Returning to main menu")
-            
-    
-    @staticmethod
-    def update(mydict):
-        try:
-            name, check = Utilities.show_data(mydict)            
-            if not check:
-                print(f"Could not find an account for {name}")
-                raise KeyboardInterrupt
-
-            print(f"The current password for {name} is {mydict[name]}...")
-            print("What would you like the new password to be?")
-            new_password = input(": ")
-            mydict[name] = new_password
-            Utilities.save(mydict)
-            print("Password has been updated successfully")
-
-        except KeyboardInterrupt:
-            print("Returning to main menu")
-
-    @staticmethod
-    def delete(mydict):
-        try:
-            name, check = Utilities.show_data(mydict)
-            if not check:
-                print(f"Could not find an account for {name}")
-                raise KeyboardInterrupt
-
-            prompt = f"Are you sure you wish to delete {name}?\n1)Yes\n2)No"
-            answer = Utilities.verifyResponse(prompt, [1,2])
-            if answer == 2: raise KeyboardInterrupt
-            del mydict[name]
-            print("Deleted")
-            Utilities.save(mydict)
-
-        except KeyboardInterrupt:
-            print("Returning to main menu")
         
     @staticmethod
     def save(mydict):
-        with open("C:\\Password_Manager\\mypw.json", "w") as f:
+        if not path.exists("./passwords"): mkdir("./passwords")
+        with open("./passwords\\mypw.json", "w") as f:
             dump(mydict, f, indent=4)
+        with open("./passwords\\mypw.txt", "w") as f:
+            f.write(mydict)
+        
+        print("Password has been updated successfully")
+
             
 
     @staticmethod
@@ -124,3 +67,56 @@ class Utilities:
                 sleep(1)
                 continue
             return int(response)
+
+class CRUD:
+    def __init__(self, passwords) -> None:
+        self.passwords = passwords
+        self.passwordGen = self.PasswordGenerator
+
+    def generate(self):
+        
+
+    def create(self):
+        print("So you wish to save a new password? Excellent. For what account will this password be for? Press CTRL + C at any time to quit")
+        name = input(": ").capitalize()
+        print(f"Noted. What is the password for {name}")
+        password = input(": ")
+        self.passwords[name] = password
+        Utilities.save(self.passwords)
+        print("Saved")
+
+    def read(self):
+        name, check = Utilities.show_data(self.passwords)
+
+        if not check:
+            print(f"Could not find an account for {name}")
+            raise KeyboardInterrupt
+
+        print(f"{name}: {self.passwords[name]}")
+        input("press enter to proceed:")
+            
+    
+    def update(self):
+        name, check = Utilities.show_data(self.passwords)            
+        if not check:
+            print(f"Could not find an account for {name}")
+            raise KeyboardInterrupt
+
+        print(f"The current password for {name} is {self.passwords[name]}...")
+        print("What would you like the new password to be?")
+        new_password = input(": ")
+        self.passwords[name] = new_password
+        Utilities.save(self.passwords)
+
+    def delete(self):
+        name, check = Utilities.show_data(self.passwords)
+        if not check:
+            print(f"Could not find an account for {name}")
+            raise KeyboardInterrupt
+
+        prompt = f"Are you sure you wish to delete {name}?\n1)Yes\n2)No"
+        answer = Utilities.verifyResponse(prompt, [1,2])
+        if answer == 2: raise KeyboardInterrupt
+        del self.passwords[name]
+        print("Deleted")
+        Utilities.save(self.passwords)
