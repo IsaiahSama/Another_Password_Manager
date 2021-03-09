@@ -43,7 +43,7 @@ class Utilities:
         with open("./passwords\\mypw.json", "w") as f:
             dump(mydict, f, indent=4)
         with open("./passwords\\mypw.txt", "w") as f:
-            f.write(mydict)
+            f.write(str(mydict))
         
         print("Password has been updated successfully")
 
