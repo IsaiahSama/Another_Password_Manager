@@ -1,6 +1,6 @@
 import string
 from random import choice
-
+from pyperclip import copy
 class PasswordGenerator:
     def __init__(self) -> None:
         self.all_chars = []
@@ -37,5 +37,7 @@ class PasswordGenerator:
     def show_password(self, password):
         print("Now listen closely... your password is...")
         print(''.join(password))
+        copy(''.join(password))
+        print("Your password has been copied to your clipboard. When you return to the main menu, be sure to save it :D")
         input("\nPress enter to continue: ")
     

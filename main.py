@@ -11,7 +11,7 @@ class Main():
     def menu(self):
         sleep(2)
         system("CLS")
-        prompt = "How may I help you today?\n1)Generate a new password\n2)Add a new Password\n3)View a Password\n4)Update a Password\n5)Delete a Password\n6)Exit the program\n"
+        prompt = "How may I help you today?\n1)Generate a new password\n2)Save a new Password\n3)View a Password\n4)Update a Password\n5)Delete a Password\n6)Exit the program\n"
         response = Utilities.verifyResponse(prompt, [1,2,3,4,5,6])
         if response == 1: self.crud.generate()
         elif response == 2: self.crud.create()
