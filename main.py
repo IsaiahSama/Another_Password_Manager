@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from mechanics import Utilities, system, sleep, CRUD
 
 # Password Manager supporting basic CRUD
