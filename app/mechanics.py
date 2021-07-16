@@ -27,6 +27,7 @@ class ManagerFunctions:
         print("Making the request")
         json = {"LAPM": inner_dict}
 
+        response = None
 
         try:
             response = post(url, json=json)
@@ -49,9 +50,7 @@ class ManagerFunctions:
         print("Information has been gathered")
         # Checks if the response is good or not
         if self.check_for_success(data):
-            print(data["SUCCESS_OR_FAILURE"]["MESSAGE"])
             if data["RESPONSE"] == "200 OK TRUE":
-                print("You are already verified.")
                 return True
                 
             print("Visit your email, and then enter the 7 character code received.")
