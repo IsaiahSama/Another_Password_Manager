@@ -1,6 +1,7 @@
 from errors import *
 from requests import post, Response
 from json import dumps, loads
+from copy import copy
 
 BASE = "http://127.0.0.1:5000/api/v1/"
 
@@ -10,20 +11,6 @@ class ManagerFunctions:
         self.password = password
         self.auth = {"EMAIL": self.email, "PASSWORD": self.password}
 
-
-    def handle_task(self, task:str, online:bool) -> None:
-        """Function that takes a string task, and the boolean Online, and executes the function accordingly"""
-        
-        if task in ["create", "update"]:
-            pass
-        elif task == "delete":
-            pass
-        elif task == "view":
-            pass 
-        elif task == "sync":
-            pass 
-        elif task == "help":
-            pass
 
     # Responsible for handling API Calls    
         
@@ -37,6 +24,7 @@ class ManagerFunctions:
 
         # Takes the inner dict and puts it in the outer value.
 
+        print("Making the request")
         json = {"LAPM": inner_dict}
 
 
@@ -44,20 +32,21 @@ class ManagerFunctions:
             response = post(url, json=json)
             response.raise_for_status()
         except Exception as err:
-            raise BadStatusException(str(err))
+            print(f"Something went wrong with the request: {err}")
 
         return response
 
     def activate_account(self) -> bool:
-        """This function is called before every API request.
+        """This function is called in order to use API request.
         
         Returns a bool"""
         url = BASE + "activate/"
 
         response = self.make_request(url, {"AUTH": self.auth})
 
+        print("Gathering information")
         data = self.get_inner_dict(response)
-        
+        print("Information has been gathered")
         # Checks if the response is good or not
         if self.check_for_success(data):
             print(data["SUCCESS_OR_FAILURE"]["MESSAGE"])
@@ -70,6 +59,29 @@ class ManagerFunctions:
 
             if self.verify_account(code):
                 return True
+        return False
+
+    def verify_account(self, code) -> bool:
+        """Function that handles the second part of the Verification process.
+        
+        Arguments: 
+        The code that was entered
+        
+        Returns -> bool"""
+
+        auth = copy(self.auth)
+        auth.update({"VERICODE": code})
+        inner_dict = {
+            "AUTH": auth
+        } 
+
+        url = BASE + "activate/"
+
+        response = self.make_request(url, inner_dict)
+        data = self.get_inner_dict(response)
+
+        # Returns True if successful, False otherwise
+        return self.check_for_success(data)
 
 
     def get_inner_dict(self, response) -> dict:
@@ -91,6 +103,7 @@ class ManagerFunctions:
         Returns bool, or raises FailedApiRequestException"""
 
         # If an error occurred, Raise 
+        print("Checking for success...")
         if not data_dict["SUCCESS_OR_FAILURE"]["SUCCESS"]:
             # Uses a temporary variable x, to make accessing easier
             
@@ -106,23 +119,6 @@ class ManagerFunctions:
         self.display_good_data(data_dict)
         return True
 
-    def verify_account(self, code) -> bool:
-        """Function that handles the second part of the Verification process.
-        
-        Arguments: 
-        The code that was entered
-        
-        Returns -> bool"""
-
-        inner_dict = {
-            "AUTH": self.auth.update({"VERICODE": code})
-        } 
-
-        response = self.make_request(inner_dict)
-        data = self.get_inner_dict(response)
-
-        # Returns True if successful, False otherwise
-        return self.check_for_success(data)
 
     def display_good_data(self, good_dict:dict):
         """Function that accepts a succes dictionary, and displays the data to the user."""
@@ -156,7 +152,7 @@ class ManagerFunctions:
         
         to_send = f"""Error name: {error_dict['ERROR']}\nCause: {error_dict['MESSAGE']}"""
         if extra := error_dict["EXTRA"]:
-            to_send += f"\n{extra}"
+            to_send += f"\nExtra: {extra}"
 
         self.pprint(to_send)
 
@@ -168,3 +164,36 @@ class ManagerFunctions:
         print(message)
         print("-------------------------------")
         print("\n")
+
+class TaskHandler:
+    def __init__(self, mfunc:ManagerFunctions, online:bool) -> None:
+        self.mfunc = mfunc
+        self.online = online
+
+    def handle_task(self, task:str, online:bool) -> None:
+        """Function that takes a string task, and the boolean Online, and executes the function accordingly"""
+
+        print("\n\n")
+        if task in ["create", "update"]:
+            pass
+        elif task == "delete":
+            pass
+        elif task == "view":
+            pass 
+        elif task == "sync":
+            pass 
+        elif task == "help":
+            self.provide_help()
+
+        print("\n\n")
+
+    def provide_help(self):
+        print("About: Look Another Password Manager provides a safe, easy to use place for you to store your passwords, both locally and online, for access by you anywhere")
+        print("Showing Help".center(110, "="))
+        print("Create -> This allows you to store one of your account - password pairs with us.")
+        print("Update -> This allows you to update an account - password pair that you already have with us")
+        print("Delete -> This will remove an account - password pair of your choice from our memory")
+        print("View -> This allows you to view any of your account - password pairs that you have saved with us.")
+        print("Sync -> For changes made while offline, this will send any updates that you made to sync with our servers.")
+        print("Help -> Displays this help message :)")
+        print("End of Help".center(110, "="))
