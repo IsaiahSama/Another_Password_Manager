@@ -183,6 +183,10 @@ class TaskHandler:
             pass 
         elif task == "help":
             self.provide_help()
+        elif task == "quit":
+            raise KeyboardInterrupt
+        else:
+            print("I'm not quite sure what you want me to do")
 
         print("\n\n")
 
