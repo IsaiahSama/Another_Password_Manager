@@ -2,7 +2,7 @@ from errors import *
 from requests import post, Response
 from json import dumps, loads
 
-BASE = "https://lapasswordmanager.heroku.app.com/api/v1/"
+BASE = "http://127.0.0.1:5000/api/v1/"
 
 class ApiFunctions:
     def __init__(self, email, password) -> None:
@@ -14,7 +14,7 @@ class ApiFunctions:
         """This function is called before every API request.
         
         Returns a bool"""
-        url = BASE + "activate"
+        url = BASE + "activate/"
 
         response = self.make_request(url, {"AUTH": self.auth})
 
@@ -34,7 +34,7 @@ class ApiFunctions:
                 return True
             
 
-    def make_request(url, inner_dict:dict) -> Response:
+    def make_request(self, url, inner_dict:dict) -> Response:
         """Function that makes the request, and returns the response
         
         Arguments: 
@@ -44,19 +44,19 @@ class ApiFunctions:
 
         # Takes the inner dict and puts it in the outer value.
 
-        json = {"LAPM": {inner_dict}}
+        json = {"LAPM": inner_dict}
 
 
         try:
             response = post(url, json=json)
             response.raise_for_status()
-        except Exception:
-            raise BadStatusException
+        except Exception as err:
+            raise BadStatusException(str(err))
 
         return response
         
 
-    def get_inner_dict(response) -> dict:
+    def get_inner_dict(self, response) -> dict:
         """This gets the JSON data from the response object, and returns the inner dictionary.
         
         Arguments:
@@ -67,7 +67,7 @@ class ApiFunctions:
         data = response.json()
         return data["LAPM"]
 
-    def check_for_success(data_dict) -> bool:
+    def check_for_success(self, data_dict) -> bool:
         """Checks to see if the response was Successful or not
         
         Arguments:
@@ -119,5 +119,8 @@ class ApiFunctions:
         if extra := error_dict["EXTRA"]:
             to_send += f"\n{extra}"
 
+        print("\n")
+        print("-------------------------------")
         print(to_send)
-        print("Press Enter to continue")
+        print("-------------------------------")
+        print("\n")

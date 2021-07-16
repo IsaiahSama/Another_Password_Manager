@@ -16,8 +16,8 @@ def menu():
     try:
         api.activate_account()
     except FailedApiRequestException as err:
-        api.handle_bad_exception(loads(err))
-        input("")
+        api.handle_bad_exception(loads(str(err)))
+        input("Press Enter to continue\n:")
         exit()
 
 def main():

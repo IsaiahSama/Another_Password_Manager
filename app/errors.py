@@ -2,8 +2,8 @@
 
 class BadStatusException(Exception):
     """Exception raised when raise for status fails."""
-    def __init__(self) -> None:
-        super().__init__("Unable to form a connection. Proceeding with local version.")
+    def __init__(self, err) -> None:
+        super().__init__(f"An error occurred with the server: {err}")
 
 class FailedApiRequestException(Exception):
     """Exception raised when the API returns a failed response.
