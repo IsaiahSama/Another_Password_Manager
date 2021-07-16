@@ -1,30 +1,67 @@
 #! python3
 # The purpose of this program is to allow for an easy, official way for accessing the PWmanager API, and handling local versions as well.
 # Application will use requests when dealing with online, and will otherwise store the data locally, supporting being uploaded after.
+# API Documentation can be found https://github.com/IsaiahSama/LAPasswordManager
 
 from mechanics import *
 from pyinputplus import inputChoice, inputEmail, inputPassword
 from os import system
 
-email = ""
-password = ""
 
-def menu():
-    system("CLS")
-    response = inputChoice(["Create", "Get", "Update", "Delete"], "What would you like to do today? Create, Update, Get or Delete a account-password entry?\n")
-    api = ApiFunctions(email, password)
-    try:
-        api.activate_account()
-    except FailedApiRequestException as err:
-        api.handle_bad_exception(loads(str(err)))
-        input("Press Enter to continue\n:")
-        exit()
+def menu(mfunc:ManagerFunctions, online):
+    """Function that accepts an instance of ManagerFunctions and online, and provides a menu interface for users.
+    
+    Arguments:
+    Mfunc -> This is an instance of the ManagerFunctions class.
 
+    online -> This is a bool. And decides whether to do only local, or online operations"""
+    while True:
+        system("CLS")
+        print("Press ctrl + c to exit at any time")
+
+        # Gets the task to be done
+        task = get_task(online)
+
+        # Handles the task to be done
+        mfunc.handle_task(task.lower())  
+        input("Press enter to continue:")      
+
+def get_task(online:bool) -> str:
+    """Function that prompts for user input, regarding what they want to do with their passwords, and returns the response.
+    
+    Arguments: Whether we are using the api or not"""
+    
+    options = ["Create", "View", "Update", "Delete"]
+    if online:
+        options.append("Sync")
+
+    options.append("Help")
+    options.append("Quit")
+    prompt_options = '\n'.join(options)
+    prompt = f"How may I help you with your passwords today? {prompt_options}\n:"
+
+    return inputChoice(options, prompt)
+
+        
 def main():
-    global email, password
     email = inputEmail("What is your registered Look Another Password Manager email\n")
     password = inputPassword(prompt="What is your password for this email?\n")
-    while True:
-        menu()
+    mfunc = ManagerFunctions(email, password)
+    online = True
+    try:
+        mfunc.activate_account()
+    except FailedApiRequestException as err:
+        mfunc.handle_bad_exception(loads(str(err)))
+        online = False
+        print("For now, we will just use our offline version.")
+
+    input("Done. Press enter to continue")
+    
+    try:
+        menu(mfunc, online)
+    except KeyboardInterrupt:
+        print("Thanks for using us. Press enter to exit")
+        input()
+    
 
 main()

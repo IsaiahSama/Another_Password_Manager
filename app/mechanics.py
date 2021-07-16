@@ -4,12 +4,50 @@ from json import dumps, loads
 
 BASE = "http://127.0.0.1:5000/api/v1/"
 
-class ApiFunctions:
+class ManagerFunctions:
     def __init__(self, email, password) -> None:
         self.email = email
         self.password = password
         self.auth = {"EMAIL": self.email, "PASSWORD": self.password}
+
+
+    def handle_task(self, task:str, online:bool) -> None:
+        """Function that takes a string task, and the boolean Online, and executes the function accordingly"""
         
+        if task in ["create", "update"]:
+            pass
+        elif task == "delete":
+            pass
+        elif task == "view":
+            pass 
+        elif task == "sync":
+            pass 
+        elif task == "help":
+            pass
+
+    # Responsible for handling API Calls    
+        
+    def make_request(self, url, inner_dict:dict) -> Response:
+        """Function that makes the request, and returns the response
+        
+        Arguments: 
+        url -> The url to make the request to
+        json -> The inner dict to be put in the root of LAPM
+        """
+
+        # Takes the inner dict and puts it in the outer value.
+
+        json = {"LAPM": inner_dict}
+
+
+        try:
+            response = post(url, json=json)
+            response.raise_for_status()
+        except Exception as err:
+            raise BadStatusException(str(err))
+
+        return response
+
     def activate_account(self) -> bool:
         """This function is called before every API request.
         
@@ -32,29 +70,7 @@ class ApiFunctions:
 
             if self.verify_account(code):
                 return True
-            
 
-    def make_request(self, url, inner_dict:dict) -> Response:
-        """Function that makes the request, and returns the response
-        
-        Arguments: 
-        url -> The url to make the request to
-        json -> The inner dict to be put in the root of LAPM
-        """
-
-        # Takes the inner dict and puts it in the outer value.
-
-        json = {"LAPM": inner_dict}
-
-
-        try:
-            response = post(url, json=json)
-            response.raise_for_status()
-        except Exception as err:
-            raise BadStatusException(str(err))
-
-        return response
-        
 
     def get_inner_dict(self, response) -> dict:
         """This gets the JSON data from the response object, and returns the inner dictionary.
