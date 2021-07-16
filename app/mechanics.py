@@ -87,6 +87,7 @@ class ApiFunctions:
             }
 
             raise FailedApiRequestException(dumps(error_dict))
+        self.display_good_data(data_dict)
         return True
 
     def verify_account(self, code) -> bool:
@@ -107,6 +108,28 @@ class ApiFunctions:
         # Returns True if successful, False otherwise
         return self.check_for_success(data)
 
+    def display_good_data(self, good_dict:dict):
+        """Function that accepts a succes dictionary, and displays the data to the user."""
+
+        message = f"""Message: {good_dict['SUCCESS_OR_FAILURE']['MESSAGE']}\n"""
+        resp = good_dict["RESPONSE"]
+        if isinstance(resp, str):
+            message += f"{resp}\n"
+        elif isinstance(resp, dict):
+            k, v = list(resp.items())
+            message += f"Account Name: {k} : Password: {v}\n"
+        elif isinstance(resp, list):
+            for pair in resp:
+                k, v = list(pair.items())
+                message += f"Account Name: {k} : Password: {v}\n"
+        else:
+            message += f"{resp}\n"
+        
+        if good_dict.get("FAILED"):
+            message += f"Those that failed: {', '.join(good_dict['FAILED'])}"
+        
+        self.pprint(message)
+
     def handle_bad_exception(self, error_dict:dict):
         """Responsible for displaying the information as is stated in the error dict
         
@@ -119,8 +142,13 @@ class ApiFunctions:
         if extra := error_dict["EXTRA"]:
             to_send += f"\n{extra}"
 
+        self.pprint(to_send)
+
+    def pprint(self, message:str) -> None:
+        """Function that accepts a string, and formats it nicely for display."""
+
         print("\n")
         print("-------------------------------")
-        print(to_send)
+        print(message)
         print("-------------------------------")
         print("\n")
