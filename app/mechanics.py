@@ -210,7 +210,20 @@ class ApiHandler:
             return d_dict
         
         return self.check_for_success(d_dict)
+
+    def remove_entry_by_name(self, to_del:str) -> None:
+        """API function that queries the DELETE route of the API, and deletes an entry with the given name."""
+
+        url = BASE + "passwords/delete/"
+
+        to_send = {
+            "AUTH": self.auth, 
+            "DELETE": to_del
+        }
         
+        response = self.make_request(url, to_send)
+        dd = self.get_inner_dict(response)
+        return self.check_for_success(dd)
 
     def get_inner_dict(self, response) -> dict:
         """This gets the JSON data from the response object, and returns the inner dictionary.
@@ -219,7 +232,7 @@ class ApiHandler:
         response -> This is the response object as returned from the post request
         
         returns Dict"""
-
+        
         data = response.json()
         return data["LAPM"]
 
@@ -309,7 +322,7 @@ class TaskHandler:
 
         local = LocalChanges()
         
-        print(task.center(100, "="))
+        print(task.center(100, "~"))
         if task in ["create", "update"]:
             entries = self.prompt_for_new_entries()
             update = False if task == "create" else True
@@ -320,12 +333,6 @@ class TaskHandler:
                 local.create_or_update_local(entries, update)
 
         elif task == "view":
-            # use_server = False
-            # if online:
-            #     prompt = "What do you want to view from?\nServer\nLocal\n:"
-            #     resp = inputChoice(["server", "local"], prompt)
-            #     if resp == "server":
-            #        use_server = True
             
             acc_dict = self.display_keys(online)
             if acc_dict:
@@ -339,7 +346,9 @@ class TaskHandler:
             acc_dict = self.display_keys(online)
             if acc_dict:
                 to_find = self.prompt_for_entry(acc_dict, "delete")
-                if not online:
+                if online:
+                    self.api.remove_entry_by_name(to_find)
+                else:
                     local.remove_entry_by_name(to_find)
         elif task == "sync":
             pass 
@@ -350,7 +359,7 @@ class TaskHandler:
         else:
             print("I'm not quite sure what you want me to do")
         
-        print(f"End {task}".center(100, "="))
+        print(f"End {task}".center(100, "~"))
         if online:
             if task in ["delete", "create", "update"]:
             # Syncs
