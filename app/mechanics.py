@@ -2,8 +2,61 @@ from errors import *
 from requests import post, Response
 from json import dumps, loads
 from copy import copy
+from os import chdir, path, mkdir, system
+from typing import Union
+from pyinputplus import inputStr
+from time import sleep
+import sqlite3
+
+# For generating passwords
+from random import choices
+from string import hexdigits
+
+hex_characters = list(hexdigits)
 
 BASE = "http://127.0.0.1:5000/api/v1/"
+
+class Database:
+    def __init__(self) -> None:
+        self.db = self.connect()
+
+    def setup(self):
+        """Creates the table if it doesn't exist"""
+        self.db.execute("""CREATE TABLE IF NOT EXISTS AccountTable(
+            ACCOUNT_NAME TEXT PRIMARY KEY UNIQUE,
+            PASSWORD TEXT NOT NULL);""")
+        self.commit_and_close()
+        return True
+
+    def connect(self):
+        """Connects to the database"""
+        return sqlite3.connect("./passwords/lapm.sqlite3")
+
+    def insert_or_replace(self, acc_name, acc_pass):
+        """Inserts the account name and password into the database."""
+
+        self.db.execute("INSERT OR REPLACE INTO AccountTable (ACCOUNT_NAME, PASSWORD) VALUES (?, ?)", (acc_name, acc_pass))
+
+    def check_for_duplicate(self, acc_name:str) -> bool:
+        """Queries the database to see if a given account_name already exists. 
+        
+        Returns True if True, otherwise False"""
+
+        cursor = self.db.execute("SELECT * FROM AccountTable WHERE (ACCOUNT_NAME) == ?", (acc_name, ))
+        value = cursor.fetchone()
+        if value:
+            return True 
+        return False
+
+    def commit_and_close(self):
+        """Commits all changes and then closes the database"""
+        self.db.commit()
+        self.close()
+
+    def close(self):
+        """Closes the database connection"""
+        self.db.close()
+        return True
 
 class ManagerFunctions:
     def __init__(self, email, password) -> None:
@@ -173,8 +226,16 @@ class TaskHandler:
         """Function that takes a string task, and the boolean Online, and executes the function accordingly"""
 
         print("\n\n")
+        system("CLS")
+
+        local = LocalChanges()
+        
         if task in ["create", "update"]:
-            pass
+            entries = self.prompt_for_new_entries()
+            update = False if task == "create" else True
+
+            local.create_or_update_local(entries, update)
+
         elif task == "delete":
             pass
         elif task == "view":
@@ -187,16 +248,100 @@ class TaskHandler:
             raise KeyboardInterrupt
         else:
             print("I'm not quite sure what you want me to do")
+        
+        if online:
+            # Syncs
+            pass
+        sleep(2)
 
         print("\n\n")
 
+    def prompt_for_new_entries(self) -> Union[list, dict]:
+        """Function that is used to get the data for new entries to either create, or update. 
+        
+        Returns a list of dictionaries, containing account_name:password pairs"""
+
+        entries = []
+        try:
+            while len(entries) < 20:
+                system("CLS")
+                print("Press ctrl + c to quit when you are done.")
+                
+                name = inputStr("What is the name of the account whose password you wish to store?\n:")
+                if len(name) > 75:
+                    print("That account name is too long.")
+                    continue
+                pword = input(f"What is the password for {name}? If you leave blank, we will generate one for you:\n")
+                if len(pword) > 50:
+                    print("That password is far too long. Should be no more than 50 characters")
+                    continue
+
+                if not pword: pword = generate_password()
+                entries.append({name:pword})
+
+        except KeyboardInterrupt:
+            pass
+        
+        print("Okay. Preparing to save.")
+        if not entries: print("But... There's nothing for me to save :(")
+        return entries
+
     def provide_help(self):
+        """Function that displays help and about the system."""
         print("About: Look Another Password Manager provides a safe, easy to use place for you to store your passwords, both locally and online, for access by you anywhere")
         print("Showing Help".center(110, "="))
         print("Create -> This allows you to store one of your account - password pairs with us.")
-        print("Update -> This allows you to update an account - password pair that you already have with us")
+        print("Update -> This allows you to update an account - password pair that you already have with us. You can also create new ones as you would with the Create option.")
         print("Delete -> This will remove an account - password pair of your choice from our memory")
         print("View -> This allows you to view any of your account - password pairs that you have saved with us.")
-        print("Sync -> For changes made while offline, this will send any updates that you made to sync with our servers.")
+        print("Sync -> For changes made while offline, this will sync our servers and your local changes.")
         print("Help -> Displays this help message :)")
         print("End of Help".center(110, "="))
+
+
+# Stores changes locally within a sqlite3 file
+class LocalChanges:
+    def __init__(self) -> None:
+        self.setup()
+
+    def setup(self):
+        if path.exists("./app"):
+            chdir("./app")
+        
+        if path.exists("../main.py"):
+            chdir("..")
+        if not path.exists("./passwords"):
+            print("Performing first time local setup")
+            mkdir("passwords")
+            print("Created passwords folder.")
+        
+        db = Database()
+        db.setup()
+
+
+    def create_or_update_local(self, entries:list, update:bool):
+        """Function that accesses the database, to store the new entries within it. 
+        
+        Arguments:
+        Entries -> A list of entries to be addded to the db
+        mode -> A boolean. If True, goes ahead with an update in case of a duplicate, else, ignores it"""
+        db = Database()
+        print("Inserting these new cool stuff.")
+        for entry in entries:
+            acc_name, acc_pass = list(entry.items())[0]
+            
+            if db.check_for_duplicate(acc_name):
+                if not update:
+                    print(f"Skipping {acc_name} because we already have it saved, and this is not an update.")
+                    continue
+            if not update:
+                print(f"Stored {acc_name}")
+            else:
+                print(f"Successfully updated {acc_name}")
+            db.insert_or_replace(acc_name, acc_pass)
+        db.commit_and_close()
+        print("All done.")
+
+def generate_password():
+    """Generates a 12 character long password for use as a generated password"""
+    return ''.join(choices(hex_characters, k=12))

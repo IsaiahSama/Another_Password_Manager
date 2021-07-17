@@ -5,7 +5,6 @@
 
 from mechanics import *
 from pyinputplus import inputChoice, inputEmail, inputPassword
-from os import system
 
 
 def menu(mfunc:ManagerFunctions, online):
