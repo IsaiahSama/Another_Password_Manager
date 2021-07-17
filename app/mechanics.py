@@ -177,7 +177,7 @@ class ApiHandler:
         data_dict = self.get_inner_dict(response)
         return self.check_for_success(data_dict)
 
-    def query_all_accounts(self):
+    def query_all_accounts(self) -> list:
         """API Function which queries the API using the get route for ALL accounts. Returns the list of dictionaries."""
 
         d_dict = self.query_user_account([])
@@ -315,7 +315,6 @@ class ApiHandler:
         print("-------------------------------")
         print("\n")
 
-    
 
 class TaskHandler:
     def __init__(self, api:ApiHandler, online:bool) -> None:
@@ -359,7 +358,7 @@ class TaskHandler:
                 else:
                     local.remove_entry_by_name(to_find)
         elif task == "sync":
-            pass 
+            self.sync() 
         elif task == "help":
             self.provide_help()
         elif task == "quit":
@@ -370,8 +369,10 @@ class TaskHandler:
         print(f"End {task}".center(100, "~"))
         if online:
             if task in ["delete", "create", "update"]:
-            # Syncs
-                pass
+                print("You've made changes... Would you like to sync? Yes/No")
+                resp = inputYesNo(":")
+                if resp == "yes":
+                    self.sync()
             pass
         sleep(2)
 
@@ -465,6 +466,58 @@ class TaskHandler:
         print("Help -> Displays this help message :)")
         print("End of Help".center(110, "="))
 
+    def sync(self):
+        """Function which prompts for type of sync, then attempts to carry it out."""
+        prompt = "How would you like to sync?\nPull - This updates your local version to match the content on the server.\nPush - This takes your local changes, and updates the server with them.\nPtP - Push then pull. This way, your local changes have priority\n:"
+        resp = inputChoice(["push", "pull", "ptp"], prompt)
+
+        if resp == "push":
+            # Push local changes
+            self.handle_push()
+        elif resp == "pull":
+            # Pull Server changes
+            self.handle_pull()
+        else:
+            # Push, then pull
+            self.handle_ptp()
+
+    def handle_push(self):
+        """Function which takes all local data, and sends it forth to the server in UPDATE mode."""
+
+        # To Do this... First query the local database for ALL information
+        db = Database()
+        raw_rows = db.query_all_accounts()
+        entries = [{account[0]:account[1]} for account in raw_rows]
+
+        # Start and stop indexes
+        start, stop = 0, 20
+        print("Starting Push".center(100, "*"))
+        while len(entries) > 20:
+            self.api.create_or_update(entries[start:stop], True)
+            start += 20
+            stop += 20
+        self.api.create_or_update(entries[start:], True)
+        print("Completed push".center(100, "*"))
+    
+    def handle_pull(self):
+        """Function which queries the API for all of it's data, and loads it into local database in UPDATE mode"""
+
+        # To do this... First query the server for ALL information
+
+        print("Starting Pull".center(100, "*"))
+        entries = self.api.query_all_accounts()
+        
+        # Now that we have the list of dictionaries. Time to store them in the local database
+        local = LocalChanges()
+        local.create_or_update_local(entries, True)
+        print("Completed Pull".center(100, "*"))
+
+    def handle_ptp(self):
+        print("Starting Operation".center(100, "-"))
+        self.handle_pull()
+        self.handle_push()
+        print("Operation Complete".center(100, "-"))
+
 
 # Stores changes locally within a sqlite3 file
 class LocalChanges:
@@ -490,7 +543,7 @@ class LocalChanges:
         """Function that accesses the database, to store the new entries within it. 
         
         Arguments:
-        Entries -> A list of entries to be addded to the db
+        Entries -> A list of dictionaries representing account_name - account_pass pairs, to be added to the db
         mode -> A boolean. If True, goes ahead with an update in case of a duplicate, else, ignores it"""
         db = Database()
         print("Inserting these new cool stuff.")
