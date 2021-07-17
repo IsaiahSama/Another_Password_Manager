@@ -232,8 +232,16 @@ class ApiHandler:
         response -> This is the response object as returned from the post request
         
         returns Dict"""
-        
-        data = response.json()
+
+        try:
+            data = response.json()
+        except AttributeError as err:
+            ed = {
+                "ERROR": err,
+                "MESSAGE": "The server doesn't seem to be available right now. Do try again later",
+                "EXTRA": []
+            }
+            raise FailedApiRequestException(dumps(ed))
         return data["LAPM"]
 
     def check_for_success(self, data_dict, display=True) -> bool:

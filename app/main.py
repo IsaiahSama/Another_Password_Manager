@@ -58,9 +58,7 @@ def main():
     except FailedApiRequestException as err:
         api.handle_bad_exception(loads(str(err)))
         online = False
-    # except Exception as err:
-    #     online = False
-    #     print("For now, we will just use our offline version.")
+        print("Cannot seem to connect to server, so for now, we will only make local changes.")
 
     input("Done. Press enter to continue")
     
