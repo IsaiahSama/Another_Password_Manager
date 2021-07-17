@@ -54,6 +54,7 @@ def main():
         mfunc.activate_account()
     except FailedApiRequestException as err:
         mfunc.handle_bad_exception(loads(str(err)))
+        online = False
     # except Exception as err:
     #     online = False
     #     print("For now, we will just use our offline version.")

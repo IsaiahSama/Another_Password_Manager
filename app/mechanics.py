@@ -1,3 +1,4 @@
+from sqlite3.dbapi2 import Row
 from errors import *
 from requests import post, Response
 from json import dumps, loads
@@ -43,17 +44,28 @@ class Database:
         cursor = self.db.execute("SELECT * FROM AccountTable")
         rows = cursor.fetchall()
         return rows
+
+    def query_account_by_name(self, acc_name:str) -> Row:
+        """Queries the database and searches for an account by the given name. Returns the row"""
+
+        cursor = self.db.execute("SELECT * FROM AccountTable WHERE (ACCOUNT_NAME) == ?", (acc_name, ))
+        value = cursor.fetchone()
+        return value
+
     
     def check_for_duplicate(self, acc_name:str) -> bool:
         """Queries the database to see if a given account_name already exists. 
         
         Returns True if True, otherwise False"""
-
-        cursor = self.db.execute("SELECT * FROM AccountTable WHERE (ACCOUNT_NAME) == ?", (acc_name, ))
-        value = cursor.fetchone()
+        value = self.query_account_by_name(acc_name)
         if value:
             return True 
         return False
+
+    def delete_entry_by_name(self, acc_name:str) -> None:
+        """Queries the database for the account with the given name, and then deletes it."""
+
+        self.db.execute("DELETE FROM AccountTable WHERE ACCOUNT_NAME == (?)", (acc_name, ))
 
     def commit_and_close(self):
         """Commits all changes and then closes the database"""
@@ -238,26 +250,34 @@ class TaskHandler:
         local = LocalChanges()
         
         if task in ["create", "update"]:
+            print(task.center(100, "="))
             entries = self.prompt_for_new_entries()
             update = False if task == "create" else True
 
             local.create_or_update_local(entries, update)
 
         elif task == "view":
-            use_server = False
-            if online:
-                prompt = "What do you want to view from?\nServer\nLocal\n:"
-                resp = inputChoice(["server", "local"], prompt)
-                if resp == "server":
-                   use_server = True
+            # use_server = False
+            # if online:
+            #     prompt = "What do you want to view from?\nServer\nLocal\n:"
+            #     resp = inputChoice(["server", "local"], prompt)
+            #     if resp == "server":
+            #        use_server = True
             
-            acc_dict = self.display_keys(use_server)
-            to_find = self.prompt_for_entry(acc_dict)
-            if not use_server:
-                local.display_pair(acc_dict, to_find)
+            print("View".center(100, "="))
+            acc_dict = self.display_keys(online)
+            if acc_dict:
+                to_find = self.prompt_for_entry(acc_dict)
+                if not online:
+                    local.display_pair(acc_dict, to_find)
 
         elif task == "delete":
-            pass
+            print("Delete".center(100, "="))
+            acc_dict = self.display_keys(online)
+            if acc_dict:
+                to_find = self.prompt_for_entry(acc_dict, "delete")
+                if not online:
+                    local.remove_entry_by_name(to_find)
         elif task == "sync":
             pass 
         elif task == "help":
@@ -325,20 +345,26 @@ class TaskHandler:
             [acc_dict.update(inner_dict) for inner_dict in acc_dicts]
             db.close()
 
-        print("Account Names".center(100, "="))
-        print("\n".join(list(acc_dict.keys())))
-        print("End of Names".center(100, "="))
+        if not acc_dict:
+            print("You have no existing accounts. Create some first :)")
+        else:
+            print("Account Names".center(100, "="))
+            print("\n".join(list(acc_dict.keys())))
+            print("End of Names".center(100, "="))
 
         return acc_dict
 
-    def prompt_for_entry(self, acc_dict:dict) -> str:
-        """Function that asks the user for the name of the account whose password they wish to view.
+    def prompt_for_entry(self, acc_dict:dict, mode:str="view") -> str:
+        """Function that asks the user for the name of the account whose password they wish to view or Delete.
         
-        Returns the response. Will validate the response using acc_names
+        Arguments: 
+        Acc_dict -> This is a dictionary of all existing accounts 
+        Mode -> This is a string literal of either view or delete
+        Returns the response.
         """
         print("Press ctrl + c to exit")
         try:
-            response = inputChoice(list(acc_dict.keys()), prompt=f"Select the name of the account you wish to view. Do note that they are case sensitive:\n")
+            response = inputChoice(list(acc_dict.keys()), prompt=f"Select the name of the account you wish to {mode}. Do note that they are case sensitive:\n")
             return response
         except KeyboardInterrupt:
             print("Cancelling")
@@ -404,7 +430,23 @@ class LocalChanges:
         """Function that indexes the acc_Dict with the to_find, and displays it"""
 
         value = acc_dict[to_find]
-        print(f"Ok. The account name is {to_find}, and the password is {value}")
+        print(f"Ok. The account name is `{to_find}`, and the password is `{value}`")
+
+    def remove_entry_by_name(self, to_find:str) -> None:
+        """Function that queries the database and deletes the specified entry.
+        
+        Then displays the name and password of the deleted entry"""
+        db = Database()
+        to_delete = db.query_account_by_name(to_find)
+        name, pword = [to_delete[0], to_delete[1]]
+        prompt = f"Are you sure that you wish to delete the account `{name}` with password `{pword}`? Yes/No?\n"
+        confirm = inputYesNo(prompt)
+        if confirm == "yes":
+            db.delete_entry_by_name(to_find)
+            print(f"Deleted the account named {name}")
+        else:
+            print("ABORT ABORT!!!")
+        db.commit_and_close()
 
 def generate_password():
     """Generates a 12 character long password for use as a generated password"""
