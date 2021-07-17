@@ -7,15 +7,15 @@ from mechanics import *
 from pyinputplus import inputEmail, inputPassword
 
 
-def menu(mfunc:ManagerFunctions, online):
-    """Function that accepts an instance of ManagerFunctions and online, and provides a menu interface for users.
+def menu(api:ApiHandler, online):
+    """Function that accepts an instance of ApiHandler and online, and provides a menu interface for users.
     
     Arguments:
-    Mfunc -> This is an instance of the ManagerFunctions class.
+    api -> This is an instance of the ApiHandler class.
 
     online -> This is a bool. And decides whether to do only local, or online operations"""
 
-    handler = TaskHandler(mfunc, online)
+    handler = TaskHandler(api, online)
     while True:
         system("CLS")
         print("Press ctrl + c to exit at any time")
@@ -24,7 +24,10 @@ def menu(mfunc:ManagerFunctions, online):
         task = get_task(online)
 
         # Handles the task to be done
-        handler.handle_task(task.lower(), online)  
+        try:
+            handler.handle_task(task.lower(), online)
+        except FailedApiRequestException as err:
+            api.handle_bad_exception(loads(str(err)))
         input("Press enter to continue:")      
 
 def get_task(online:bool) -> str:
@@ -47,13 +50,13 @@ def get_task(online:bool) -> str:
 def main():
     email = inputEmail("What is your registered Look Another Password Manager email\n")
     password = inputPassword(prompt="What is your password for this email?\n")
-    mfunc = ManagerFunctions(email, password)
+    api = ApiHandler(email, password)
     print("Attempting to activate account")
     online = True
     try:
-        mfunc.activate_account()
+        api.activate_account()
     except FailedApiRequestException as err:
-        mfunc.handle_bad_exception(loads(str(err)))
+        api.handle_bad_exception(loads(str(err)))
         online = False
     # except Exception as err:
     #     online = False
@@ -62,7 +65,7 @@ def main():
     input("Done. Press enter to continue")
     
     try:
-        menu(mfunc, online)
+        menu(api, online)
     except KeyboardInterrupt:
         print("Thanks for using us. Press enter to exit")
         input()

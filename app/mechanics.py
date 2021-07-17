@@ -77,7 +77,7 @@ class Database:
         self.db.close()
         return True
 
-class ManagerFunctions:
+class ApiHandler:
     def __init__(self, email, password) -> None:
         self.email = email
         self.password = password
@@ -98,6 +98,7 @@ class ManagerFunctions:
 
         print("Making the request")
         json = {"LAPM": inner_dict}
+        print(dumps(json, indent=4))
 
         response = None
 
@@ -154,6 +155,31 @@ class ManagerFunctions:
         # Returns True if successful, False otherwise
         return self.check_for_success(data)
 
+    # CRUD Routes
+
+    def create_or_update(self, entries, overwrite:bool):
+        """API Function which accepts entries, and a goes to the `store` route of the API, to add the entries to the database
+        
+        Arguments:
+        Entries -> This is a list of dictionaries of entries
+        
+        overwrite -> Bool, This is True if will update Entries, False otherwise"""
+
+        url = BASE + "passwords/store/"
+
+        to_send = {
+            "AUTH": self.auth,
+            "STORE": entries,
+            "OVERWRITE": overwrite
+        }
+
+        response = self.make_request(url, to_send)
+        data_dict = self.get_inner_dict(response)
+        return self.check_for_success(data_dict)
+
+    def query_all_accounts(self):
+        """API Function which queries the API using the get route. Returns the list of dictionaries."""
+        pass
 
     def get_inner_dict(self, response) -> dict:
         """This gets the JSON data from the response object, and returns the inner dictionary.
@@ -166,11 +192,12 @@ class ManagerFunctions:
         data = response.json()
         return data["LAPM"]
 
-    def check_for_success(self, data_dict) -> bool:
+    def check_for_success(self, data_dict, display=True) -> bool:
         """Checks to see if the response was Successful or not
         
         Arguments:
         Data_dict - This is the dictionary returned from response.json
+        display -> Bool, Chooses whether to display good data or not.
         Returns bool, or raises FailedApiRequestException"""
 
         # If an error occurred, Raise 
@@ -187,7 +214,7 @@ class ManagerFunctions:
             }
 
             raise FailedApiRequestException(dumps(error_dict))
-        self.display_good_data(data_dict)
+        if display: self.display_good_data(data_dict)
         return True
 
 
@@ -199,12 +226,12 @@ class ManagerFunctions:
         if isinstance(resp, str):
             message += f"{resp}\n"
         elif isinstance(resp, dict):
-            k, v = list(resp.items())
-            message += f"Account Name: {k} : Password: {v}\n"
+            k, v = list(resp.items())[0]
+            message += f"Account Name: {k} - Password: {v}\n"
         elif isinstance(resp, list):
             for pair in resp:
-                k, v = list(pair.items())
-                message += f"Account Name: {k} : Password: {v}\n"
+                k, v = list(pair.items())[0]
+                message += f"Account Name: {k} - Password: {v}\n"
         else:
             message += f"{resp}\n"
         
@@ -236,9 +263,11 @@ class ManagerFunctions:
         print("-------------------------------")
         print("\n")
 
+    
+
 class TaskHandler:
-    def __init__(self, mfunc:ManagerFunctions, online:bool) -> None:
-        self.mfunc = mfunc
+    def __init__(self, api:ApiHandler, online:bool) -> None:
+        self.api = api
         self.online = online
 
     def handle_task(self, task:str, online:bool) -> None:
@@ -254,7 +283,10 @@ class TaskHandler:
             entries = self.prompt_for_new_entries()
             update = False if task == "create" else True
 
-            local.create_or_update_local(entries, update)
+            if online:
+                self.api.create_or_update(entries, update)
+            else:
+                local.create_or_update_local(entries, update)
 
         elif task == "view":
             # use_server = False
@@ -335,7 +367,7 @@ class TaskHandler:
         Returns -> All valid dictionaries with acc_name/acc_pass pairs"""
 
         if use_server:
-            pass 
+            acc_dicts = self.api.query_all_accounts() 
         
         else:
             db = Database()
