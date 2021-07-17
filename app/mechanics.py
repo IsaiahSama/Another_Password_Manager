@@ -178,8 +178,39 @@ class ApiHandler:
         return self.check_for_success(data_dict)
 
     def query_all_accounts(self):
-        """API Function which queries the API using the get route. Returns the list of dictionaries."""
-        pass
+        """API Function which queries the API using the get route for ALL accounts. Returns the list of dictionaries."""
+
+        d_dict = self.query_user_account([])
+
+        if self.check_for_success(d_dict, False):
+            return d_dict["RESPONSE"]
+
+    def query_user_account(self, name:list) -> Union[None, dict]:
+        """API Function that Queries the API using the GET url, for a specific Acc_Name / Acc_Pass pair.
+        
+        Arguments: 
+        name -> A list containg the name of the account to return
+        
+        Returns, None, or d_dict if being called with an empty list as name"""
+
+        url = BASE + "passwords/get/"
+
+        to_send = {
+            "AUTH": self.auth,
+            "GET": name,
+            "IGNOREMISSING": False
+        }
+
+        if name:
+            to_send["IGNOREMISSING"] = True
+        
+        response = self.make_request(url, to_send)
+        d_dict = self.get_inner_dict(response)
+        if not name:
+            return d_dict
+        
+        return self.check_for_success(d_dict)
+        
 
     def get_inner_dict(self, response) -> dict:
         """This gets the JSON data from the response object, and returns the inner dictionary.
@@ -278,8 +309,8 @@ class TaskHandler:
 
         local = LocalChanges()
         
+        print(task.center(100, "="))
         if task in ["create", "update"]:
-            print(task.center(100, "="))
             entries = self.prompt_for_new_entries()
             update = False if task == "create" else True
 
@@ -296,15 +327,15 @@ class TaskHandler:
             #     if resp == "server":
             #        use_server = True
             
-            print("View".center(100, "="))
             acc_dict = self.display_keys(online)
             if acc_dict:
                 to_find = self.prompt_for_entry(acc_dict)
-                if not online:
+                if online:
+                    self.api.query_user_account([to_find])
+                else:
                     local.display_pair(acc_dict, to_find)
 
         elif task == "delete":
-            print("Delete".center(100, "="))
             acc_dict = self.display_keys(online)
             if acc_dict:
                 to_find = self.prompt_for_entry(acc_dict, "delete")
@@ -319,6 +350,7 @@ class TaskHandler:
         else:
             print("I'm not quite sure what you want me to do")
         
+        print(f"End {task}".center(100, "="))
         if online:
             if task in ["delete", "create", "update"]:
             # Syncs
@@ -372,10 +404,12 @@ class TaskHandler:
         else:
             db = Database()
             accounts = db.query_all_accounts()
-            acc_dicts = [{account[0]:account[1]} for account in accounts]
-            acc_dict = {}
-            [acc_dict.update(inner_dict) for inner_dict in acc_dicts]
             db.close()
+
+            acc_dicts = [{account[0]:account[1]} for account in accounts]
+
+        acc_dict = {}
+        [acc_dict.update(inner_dict) for inner_dict in acc_dicts]
 
         if not acc_dict:
             print("You have no existing accounts. Create some first :)")
