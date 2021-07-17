@@ -4,7 +4,7 @@
 # API Documentation can be found https://github.com/IsaiahSama/LAPasswordManager
 
 from mechanics import *
-from pyinputplus import inputChoice, inputEmail, inputPassword
+from pyinputplus import inputEmail, inputPassword
 
 
 def menu(mfunc:ManagerFunctions, online):

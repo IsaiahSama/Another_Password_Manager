@@ -4,7 +4,7 @@ from json import dumps, loads
 from copy import copy
 from os import chdir, path, mkdir, system
 from typing import Union
-from pyinputplus import inputStr
+from pyinputplus import inputChoice, inputStr, inputYesNo
 from time import sleep
 import sqlite3
 
@@ -37,6 +37,13 @@ class Database:
 
         self.db.execute("INSERT OR REPLACE INTO AccountTable (ACCOUNT_NAME, PASSWORD) VALUES (?, ?)", (acc_name, acc_pass))
 
+    def query_all_accounts(self):
+        """Queries the database for all of the users accounts."""
+
+        cursor = self.db.execute("SELECT * FROM AccountTable")
+        rows = cursor.fetchall()
+        return rows
+    
     def check_for_duplicate(self, acc_name:str) -> bool:
         """Queries the database to see if a given account_name already exists. 
         
@@ -236,10 +243,21 @@ class TaskHandler:
 
             local.create_or_update_local(entries, update)
 
+        elif task == "view":
+            use_server = False
+            if online:
+                prompt = "What do you want to view from?\nServer\nLocal\n:"
+                resp = inputChoice(["server", "local"], prompt)
+                if resp == "server":
+                   use_server = True
+            
+            acc_dict = self.display_keys(use_server)
+            to_find = self.prompt_for_entry(acc_dict)
+            if not use_server:
+                local.display_pair(acc_dict, to_find)
+
         elif task == "delete":
             pass
-        elif task == "view":
-            pass 
         elif task == "sync":
             pass 
         elif task == "help":
@@ -250,7 +268,9 @@ class TaskHandler:
             print("I'm not quite sure what you want me to do")
         
         if online:
+            if task in ["delete", "create", "update"]:
             # Syncs
+                pass
             pass
         sleep(2)
 
@@ -286,6 +306,44 @@ class TaskHandler:
         if not entries: print("But... There's nothing for me to save :(")
         return entries
 
+    def display_keys(self, use_server:bool) -> dict:
+        """Function used to display all account names to a user.
+        
+        Arguments:
+        Use_server -> If True, will get the keys from the Server. If False, will get the keys from the local database
+        
+        Returns -> All valid dictionaries with acc_name/acc_pass pairs"""
+
+        if use_server:
+            pass 
+        
+        else:
+            db = Database()
+            accounts = db.query_all_accounts()
+            acc_dicts = [{account[0]:account[1]} for account in accounts]
+            acc_dict = {}
+            [acc_dict.update(inner_dict) for inner_dict in acc_dicts]
+            db.close()
+
+        print("Account Names".center(100, "="))
+        print("\n".join(list(acc_dict.keys())))
+        print("End of Names".center(100, "="))
+
+        return acc_dict
+
+    def prompt_for_entry(self, acc_dict:dict) -> str:
+        """Function that asks the user for the name of the account whose password they wish to view.
+        
+        Returns the response. Will validate the response using acc_names
+        """
+        print("Press ctrl + c to exit")
+        try:
+            response = inputChoice(list(acc_dict.keys()), prompt=f"Select the name of the account you wish to view. Do note that they are case sensitive:\n")
+            return response
+        except KeyboardInterrupt:
+            print("Cancelling")
+        return False
+
     def provide_help(self):
         """Function that displays help and about the system."""
         print("About: Look Another Password Manager provides a safe, easy to use place for you to store your passwords, both locally and online, for access by you anywhere")
@@ -294,7 +352,7 @@ class TaskHandler:
         print("Update -> This allows you to update an account - password pair that you already have with us. You can also create new ones as you would with the Create option.")
         print("Delete -> This will remove an account - password pair of your choice from our memory")
         print("View -> This allows you to view any of your account - password pairs that you have saved with us.")
-        print("Sync -> For changes made while offline, this will sync our servers and your local changes.")
+        print("Sync -> For changes made while offline, this will sync our servers and your local changes. To see sync, you have to be signed in.")
         print("Help -> Displays this help message :)")
         print("End of Help".center(110, "="))
 
@@ -341,6 +399,12 @@ class LocalChanges:
             db.insert_or_replace(acc_name, acc_pass)
         db.commit_and_close()
         print("All done.")
+
+    def display_pair(self, acc_dict:dict, to_find:str) -> None:
+        """Function that indexes the acc_Dict with the to_find, and displays it"""
+
+        value = acc_dict[to_find]
+        print(f"Ok. The account name is {to_find}, and the password is {value}")
 
 def generate_password():
     """Generates a 12 character long password for use as a generated password"""
