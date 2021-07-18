@@ -15,7 +15,7 @@ from string import hexdigits
 
 hex_characters = list(hexdigits)
 
-BASE = "http://127.0.0.1:5000/api/v1/"
+BASE = "https://lapasswordmanager.herokuapp.com/api/v1/"
 
 class Database:
     def __init__(self) -> None:
