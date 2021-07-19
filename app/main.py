@@ -3,6 +3,7 @@
 # Application will use requests when dealing with online, and will otherwise store the data locally, supporting being uploaded after.
 # API Documentation can be found https://github.com/IsaiahSama/LAPasswordManager
 
+from json import load
 from mechanics import *
 from pyinputplus import inputEmail, inputPassword
 
@@ -27,6 +28,8 @@ def menu(api:ApiHandler, online):
         try:
             handler.handle_task(task.lower(), online)
         except FailedApiRequestException as err:
+            err = loads(str(err))
+            if err["ERROR"] == "NoConnectionError": online=False
             api.handle_bad_exception(loads(str(err)))
         input("Press enter to continue:")      
 
