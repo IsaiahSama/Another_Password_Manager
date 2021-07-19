@@ -238,7 +238,7 @@ class ApiHandler:
         except AttributeError as err:
             ed = {
                 "ERROR": "NoConnectionError",
-                "MESSAGE": "The server doesn't seem to be available right now, so I have switched too offline mode so you can continue making changes offline.",
+                "MESSAGE": "The server doesn't seem to be available right now, so I have switched to offline mode so you can continue making changes offline.",
                 "EXTRA": []
             }
             raise FailedApiRequestException(dumps(ed))

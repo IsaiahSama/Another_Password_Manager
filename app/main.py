@@ -30,7 +30,7 @@ def menu(api:ApiHandler, online):
         except FailedApiRequestException as err:
             err = loads(str(err))
             if err["ERROR"] == "NoConnectionError": online=False
-            api.handle_bad_exception(loads(str(err)))
+            api.handle_bad_exception(err)
         input("Press enter to continue:")      
 
 def get_task(online:bool) -> str:
