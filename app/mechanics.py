@@ -237,7 +237,7 @@ class ApiHandler:
             data = response.json()
         except AttributeError as err:
             ed = {
-                "ERROR": err,
+                "ERROR": str(err),
                 "MESSAGE": "The server doesn't seem to be available right now. Do try again later",
                 "EXTRA": []
             }
