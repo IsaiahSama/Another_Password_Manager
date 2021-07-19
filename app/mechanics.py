@@ -369,7 +369,7 @@ class TaskHandler:
         print(f"End {task}".center(100, "~"))
         if online:
             if task in ["delete", "create", "update"]:
-                print("You've made changes... Would you like to sync? Yes/No")
+                print("You've made changes to the server only... Would you like to sync? Yes/No")
                 resp = inputYesNo(":")
                 if resp == "yes":
                     self.sync()
@@ -448,6 +448,8 @@ class TaskHandler:
         """
         print("Press ctrl + c to exit")
         try:
+            if len(list(acc_dict.keys())) == 1:
+                return list(acc_dict.keys())[0]
             response = inputChoice(list(acc_dict.keys()), prompt=f"Select the name of the account you wish to {mode}. Do note that they are case sensitive:\n")
             return response
         except KeyboardInterrupt:
@@ -458,12 +460,12 @@ class TaskHandler:
         """Function that displays help and about the system."""
         print("About: Look Another Password Manager provides a safe, easy to use place for you to store your passwords, both locally and online, for access by you anywhere")
         print("Showing Help".center(110, "="))
-        print("Create -> This allows you to store one of your account - password pairs with us.")
-        print("Update -> This allows you to update an account - password pair that you already have with us. You can also create new ones as you would with the Create option.")
-        print("Delete -> This will remove an account - password pair of your choice from our memory")
-        print("View -> This allows you to view any of your account - password pairs that you have saved with us.")
-        print("Sync -> For changes made while offline, this will sync our servers and your local changes. To see sync, you have to be signed in.")
-        print("Help -> Displays this help message :)")
+        print("\n\nCreate -> This allows you to store one of your account - password pairs with us.")
+        print("\n\nUpdate -> This allows you to update an account - password pair that you already have with us. You can also create new ones as you would with the Create option.")
+        print("\n\nDelete -> This will remove an account - password pair of your choice from our memory")
+        print("\n\nView -> This allows you to view any of your account - password pairs that you have saved with us.")
+        print("\n\nSync -> For changes made while offline, this will sync our servers and your local changes. To see sync, you have to be signed in. By default, if you are online and logged in, changes will only be made to the server. To get those local changes, you will have to sync, with the `pull` option.")
+        print("\n\nHelp -> Displays this help message :)")
         print("End of Help".center(110, "="))
 
     def sync(self):
