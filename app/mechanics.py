@@ -450,7 +450,7 @@ class TaskHandler:
         try:
             if len(list(acc_dict.keys())) == 1:
                 return list(acc_dict.keys())[0]
-            response = inputChoice(list(acc_dict.keys()), prompt=f"Select the name of the account you wish to {mode}. Do note that they are case sensitive:\n")
+            response = inputChoice(list(acc_dict.keys()), prompt=f"Select the name of the account you wish to {mode}:\n")
             return response
         except KeyboardInterrupt:
             print("Cancelling")
