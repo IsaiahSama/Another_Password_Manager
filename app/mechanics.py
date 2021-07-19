@@ -333,7 +333,7 @@ class TaskHandler:
         if task in ["create", "update"]:
             entries = self.prompt_for_new_entries()
             update = False if task == "create" else True
-
+            if not entries: return False
             if online:
                 self.api.create_or_update(entries, update)
             else:
@@ -344,6 +344,7 @@ class TaskHandler:
             acc_dict = self.display_keys(online)
             if acc_dict:
                 to_find = self.prompt_for_entry(acc_dict)
+                if not to_find: return False
                 if online:
                     self.api.query_user_account([to_find])
                 else:
@@ -353,6 +354,7 @@ class TaskHandler:
             acc_dict = self.display_keys(online)
             if acc_dict:
                 to_find = self.prompt_for_entry(acc_dict, "delete")
+                if not to_find: return False
                 if online:
                     self.api.remove_entry_by_name(to_find)
                 else:
