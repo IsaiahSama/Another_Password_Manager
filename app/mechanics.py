@@ -569,7 +569,7 @@ class LocalChanges:
         """Function that indexes the acc_Dict with the to_find, and displays it"""
 
         value = acc_dict[to_find]
-        print(f"Ok. The account name is `{to_find}`, and the password is `{value}`")
+        print(f"Ok. The account name is `{to_find}`, and the password is: {value}")
 
     def remove_entry_by_name(self, to_find:str) -> None:
         """Function that queries the database and deletes the specified entry.
