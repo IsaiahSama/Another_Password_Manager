@@ -98,7 +98,6 @@ class ApiHandler:
 
         print("Making the request")
         json = {"LAPM": inner_dict}
-        print(dumps(json, indent=4))
 
         response = None
 
