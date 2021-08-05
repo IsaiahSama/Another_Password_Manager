@@ -384,7 +384,7 @@ class TaskHandler:
         
         Returns a list of dictionaries, containing account_name:password pairs"""
 
-        entries = []
+        entries = {}
         try:
             while len(entries) < 20:
                 system("CLS")
@@ -400,10 +400,10 @@ class TaskHandler:
                     continue
 
                 if not pword: pword = generate_password()
-                entries.append({name:pword})
+                entries[name] = pword
 
         except KeyboardInterrupt:
-            pass
+            entries = [{k, v} for k, v in entries.items()]
         
         print("Okay. Preparing to save.")
         if not entries: print("But... There's nothing for me to save :(")
