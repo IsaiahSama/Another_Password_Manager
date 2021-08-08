@@ -5,7 +5,7 @@ from json import dumps, loads
 from copy import copy
 from os import chdir, path, mkdir, system
 from typing import Union
-from pyinputplus import inputChoice, inputStr, inputYesNo
+from pyinputplus import inputChoice, inputPassword, inputStr, inputYesNo
 from time import sleep
 import sqlite3
 
@@ -387,6 +387,7 @@ class TaskHandler:
         entries = {}
         try:
             while len(entries) < 20:
+                sleep(1)
                 system("CLS")
                 print("Press ctrl + c to quit when you are done.")
                 
@@ -394,13 +395,13 @@ class TaskHandler:
                 if len(name) > 75:
                     print("That account name is too long.")
                     continue
-                pword = input(f"What is the password for {name}? If you leave blank, we will generate one for you:\n")
+                pword = inputPassword(f"What is the password for {name}? If you leave blank, we will generate one for you:\n")
                 if len(pword) > 50:
                     print("That password is far too long. Should be no more than 50 characters")
                     continue
 
                 if not pword: pword = generate_password()
-                entries[name] = pword
+                entries[name] = pword.strip()
 
         except KeyboardInterrupt:
             entries = [{k: v} for k, v in entries.items()]
