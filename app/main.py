@@ -68,8 +68,11 @@ def main():
     try:
         menu(api, online)
     except KeyboardInterrupt:
-        print("Thanks for using us. Press enter to exit")
-        input()
-    
+        print("Thanks for using us")
 
-main()
+try:
+    main()
+except:
+    pass
+finally:
+    input("Press enter to close")
