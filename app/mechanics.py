@@ -403,7 +403,7 @@ class TaskHandler:
                 entries[name] = pword
 
         except KeyboardInterrupt:
-            entries = [{k, v} for k, v in entries.items()]
+            entries = [{k: v} for k, v in entries.items()]
         
         print("Okay. Preparing to save.")
         if not entries: print("But... There's nothing for me to save :(")
