@@ -395,7 +395,7 @@ class TaskHandler:
                 if len(name) > 75:
                     print("That account name is too long.")
                     continue
-                pword = inputPassword(f"What is the password for {name}? If you leave blank, we will generate one for you:\n")
+                pword = inputPassword(f"What is the password for {name}? If you leave blank, we will generate one for you:\n", blank=True)
                 if len(pword) > 50:
                     print("That password is far too long. Should be no more than 50 characters")
                     continue
